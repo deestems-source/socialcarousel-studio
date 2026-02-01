@@ -13,16 +13,71 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
   const startPos = useRef({ x: 0, y: 0 });
   const startImagePos = useRef({ x: 0, y: 0 });
   
-  // Calculate aspect ratio value for layout logic
-  const getRatioValue = (ratioStr: string) => {
+  // Dynamic layout style for the container to ensure "contain" fit
+  const [layoutStyle, setLayoutStyle] = useState<React.CSSProperties>({
+      width: '100%',
+      height: 'auto',
+      aspectRatio: slide.aspectRatio || '1 / 1'
+  });
+
+  const getRatioValue = useCallback((ratioStr: string) => {
     try {
       const [w, h] = ratioStr.split('/').map(n => parseFloat(n.trim()));
       return w / h;
     } catch {
       return 1;
     }
-  };
-  const ratioValue = getRatioValue(slide.aspectRatio);
+  }, []);
+
+  // 1. Handle Container Sizing (Fit logic)
+  useEffect(() => {
+     const updateLayout = () => {
+         if (!containerRef.current || !containerRef.current.parentElement) return;
+         const parent = containerRef.current.parentElement;
+         // Use getBoundingClientRect for precise sub-pixel measurements
+         const parentRect = parent.getBoundingClientRect();
+         const parentW = parentRect.width;
+         const parentH = parentRect.height;
+         
+         if (parentW === 0 || parentH === 0) return;
+
+         const parentRatio = parentW / parentH;
+         const slideRatio = getRatioValue(slide.aspectRatio);
+
+         // If parent is wider than slide (relative to aspect), height is the limiting factor.
+         // e.g. Parent 16:9 (1.77), Slide 1:1 (1). Parent > Slide. Fit Height.
+         // e.g. Parent 16:9 (1.77), Slide 9:16 (0.56). Parent > Slide. Fit Height.
+         if (parentRatio > slideRatio) {
+             setLayoutStyle({
+                 height: '100%',
+                 width: 'auto',
+                 aspectRatio: slide.aspectRatio
+             });
+         } else {
+              // Parent is taller (or equal) than slide. Width is limiting factor.
+              // e.g. Parent 9:16 (0.56), Slide 1:1 (1). Parent < Slide. Fit Width.
+              setLayoutStyle({
+                 width: '100%',
+                 height: 'auto',
+                 aspectRatio: slide.aspectRatio
+             });
+         }
+     };
+
+     updateLayout();
+     
+     // Observe parent for resizing
+     const resizeObserver = new ResizeObserver(updateLayout);
+     if (containerRef.current?.parentElement) {
+         resizeObserver.observe(containerRef.current.parentElement);
+     }
+     window.addEventListener('resize', updateLayout);
+
+     return () => {
+         resizeObserver.disconnect();
+         window.removeEventListener('resize', updateLayout);
+     };
+  }, [slide.aspectRatio, getRatioValue]);
 
   // Store calculated base dimensions (percentages) for "Cover" fit
   const [baseDims, setBaseDims] = useState({ w: 100, h: 100 });
@@ -166,13 +221,7 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
       ref={containerRef}
       className={`relative bg-gray-200 shadow-xl rounded-xl overflow-hidden group ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       style={{ 
-        aspectRatio: slide.aspectRatio || '1 / 1',
-        // Responsive sizing logic:
-        // For Tall slides (ratio < 1), prioritize Height fit to avoid vertical overflow.
-        // For Wide slides (ratio >= 1), prioritize Width fit.
-        // Always constrain to max available space.
-        width: ratioValue >= 1 ? '100%' : 'auto',
-        height: ratioValue < 1 ? '100%' : 'auto',
+        ...layoutStyle,
         maxWidth: '100%',
         maxHeight: '100%',
         touchAction: 'none',
