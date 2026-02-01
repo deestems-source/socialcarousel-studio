@@ -13,10 +13,22 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
   const startPos = useRef({ x: 0, y: 0 });
   const startImagePos = useRef({ x: 0, y: 0 });
   
+  // Calculate aspect ratio value for layout logic
+  const getRatioValue = (ratioStr: string) => {
+    try {
+      const [w, h] = ratioStr.split('/').map(n => parseFloat(n.trim()));
+      return w / h;
+    } catch {
+      return 1;
+    }
+  };
+  const ratioValue = getRatioValue(slide.aspectRatio);
+
   // Store calculated base dimensions (percentages) for "Cover" fit
   const [baseDims, setBaseDims] = useState({ w: 100, h: 100 });
 
   // Helper to calculate boundaries based on current factors
+  // This defines the maximum percentage the image can move from center
   const getBounds = useCallback((widthPercent: number, heightPercent: number) => {
     const userScale = slide.scale || 1;
     
@@ -25,10 +37,13 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
     const renderH = heightPercent * userScale;
 
     // Allowable deviation from center (50%)
-    // If render is 100%, max deviation is 0.
-    // If render is 120%, max deviation is 10 ( +/- 10% ).
-    const maxPercX = Math.max(0, (renderW - 100) / 2);
-    const maxPercY = Math.max(0, (renderH - 100) / 2);
+    // Epsilon 0.1 to handle float rounding errors
+    let maxPercX = Math.max(0, (renderW - 100) / 2);
+    let maxPercY = Math.max(0, (renderH - 100) / 2);
+
+    // Round down extremely small values to 0 to strictly lock 'perfect fits'
+    if (maxPercX < 0.1) maxPercX = 0;
+    if (maxPercY < 0.1) maxPercY = 0;
 
     return { x: maxPercX, y: maxPercY };
   }, [slide.scale]);
@@ -40,18 +55,22 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
       const cont = containerRef.current;
       if (!img || !cont) return;
       
+      // Ensure we have valid dimensions
+      if (img.naturalWidth === 0 || cont.clientWidth === 0) return;
+
       const imgRatio = img.naturalWidth / img.naturalHeight;
       const contRatio = cont.clientWidth / cont.clientHeight;
       
       let w = 100;
       let h = 100;
 
+      // Standard "Cover" logic
+      // If image is wider than container, we match height (100%) and scale width
+      // If image is taller than container, we match width (100%) and scale height
       if (imgRatio > contRatio) {
-        // Image is wider: Fit Height (100%), Scale Width
         w = (imgRatio / contRatio) * 100;
         h = 100;
       } else {
-        // Image is taller: Fit Width (100%), Scale Height
         w = 100;
         h = (contRatio / imgRatio) * 100;
       }
@@ -63,41 +82,41 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
     if (img && img.complete) updateDimensions();
     if (img) img.onload = updateDimensions;
     
+    // ResizeObserver handles dynamic container resizing (e.g. window resize or layout shift)
     const resizeObserver = new ResizeObserver(updateDimensions);
     if (containerRef.current) resizeObserver.observe(containerRef.current);
     
     return () => resizeObserver.disconnect();
   }, [slide.imageUrl, slide.aspectRatio]);
 
-  // Enforce Bounds (Clamping) when Scale or Ratio changes
+  // Enforce Bounds (Clamping) when Scale/Ratio/BaseDims change
   useEffect(() => {
     if(!onUpdate || isDragging) return;
     
-    const timer = setTimeout(() => {
-        const bounds = getBounds(baseDims.w, baseDims.h);
-        const currentPos = slide.imagePosition || { x: 0, y: 0 };
-        
-        let newX = currentPos.x;
-        let newY = currentPos.y;
-        let changed = false;
+    const bounds = getBounds(baseDims.w, baseDims.h);
+    const currentPos = slide.imagePosition || { x: 0, y: 0 };
+    
+    let newX = currentPos.x;
+    let newY = currentPos.y;
+    let changed = false;
 
-        if (newX > bounds.x) { newX = bounds.x; changed = true; }
-        if (newX < -bounds.x) { newX = -bounds.x; changed = true; }
+    // Clamp X
+    if (newX > bounds.x) { newX = bounds.x; changed = true; }
+    else if (newX < -bounds.x) { newX = -bounds.x; changed = true; }
 
-        if (newY > bounds.y) { newY = bounds.y; changed = true; }
-        if (newY < -bounds.y) { newY = -bounds.y; changed = true; }
+    // Clamp Y
+    if (newY > bounds.y) { newY = bounds.y; changed = true; }
+    else if (newY < -bounds.y) { newY = -bounds.y; changed = true; }
 
-        if (changed) {
-            onUpdate({ imagePosition: { x: newX, y: newY } });
-        }
-    }, 50);
-    return () => clearTimeout(timer);
-
-  }, [slide.aspectRatio, slide.scale, baseDims, getBounds, onUpdate, isDragging, slide.imagePosition]);
+    if (changed) {
+        onUpdate({ imagePosition: { x: newX, y: newY } });
+    }
+  }, [baseDims, slide.scale, slide.aspectRatio, getBounds, onUpdate, isDragging, slide.imagePosition]);
 
 
   // Handle Dragging
   const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault(); 
     setIsDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
     startPos.current = { x: e.clientX, y: e.clientY };
@@ -108,6 +127,8 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
     if (!isDragging || !containerRef.current || !onUpdate) return;
 
     const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
     const deltaX = e.clientX - startPos.current.x;
     const deltaY = e.clientY - startPos.current.y;
 
@@ -143,20 +164,32 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
   return (
     <div 
       ref={containerRef}
-      className={`w-full relative bg-gray-200 overflow-hidden shadow-xl rounded-xl group ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`relative bg-gray-200 shadow-xl rounded-xl overflow-hidden group ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       style={{ 
         aspectRatio: slide.aspectRatio || '1 / 1',
-        touchAction: 'none' // Prevent scrolling on mobile while dragging
+        // Responsive sizing logic:
+        // For Tall slides (ratio < 1), prioritize Height fit to avoid vertical overflow.
+        // For Wide slides (ratio >= 1), prioritize Width fit.
+        // Always constrain to max available space.
+        width: ratioValue >= 1 ? '100%' : 'auto',
+        height: ratioValue < 1 ? '100%' : 'auto',
+        maxWidth: '100%',
+        maxHeight: '100%',
+        touchAction: 'none',
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
-      {/* Visual Hint for Dragging */}
-      <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-        Drag to Pan
-      </div>
+      {/* Visual Hint for Dragging - Only show if movable */}
+      {(getBounds(baseDims.w, baseDims.h).x > 0 || getBounds(baseDims.w, baseDims.h).y > 0) && (
+        <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+          Drag to Pan
+        </div>
+      )}
 
       {/* Image Rendering */}
       {slide.imageUrl ? (
@@ -166,22 +199,17 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
           alt="Slide content" 
           className="absolute max-w-none select-none pointer-events-none"
           style={{
-             // Explicit sizing based on calculated "Cover" dimensions
              width: `${baseDims.w}%`,
              height: `${baseDims.h}%`,
-             
-             // Position relative to container
              left: `${50 + pos.x}%`,
              top: `${50 + pos.y}%`,
-             
-             // Center pivot and scale
              transform: `translate(-50%, -50%) scale(${scale})`,
-             willChange: 'left, top, transform'
+             willChange: isDragging ? 'left, top' : 'auto'
           }}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-gray-400">
-          No Image Selected
+          No Image
         </div>
       )}
 
@@ -204,6 +232,7 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
             textShadow: '0 2px 4px rgba(0,0,0,0.5)',
             lineHeight: '1.4',
             marginBottom: '0', 
+            overflowWrap: 'break-word'
           }}
         >
           {slide.caption}

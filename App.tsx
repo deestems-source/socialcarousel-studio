@@ -33,7 +33,7 @@ const App: React.FC = () => {
         caption: DEFAULT_CAPTION,
         fontFamily: DEFAULT_FONT,
         textColor: DEFAULT_COLOR,
-        alignment: 'left',
+        alignment: 'center',
         fontSize: DEFAULT_SIZE,
         gradientIntensity: DEFAULT_GRADIENT_INTENSITY,
         aspectRatio: DEFAULT_ASPECT_RATIO,
@@ -83,6 +83,7 @@ const App: React.FC = () => {
             type="file" 
             ref={fileInputRef} 
             onChange={handleFileChange} 
+            onClick={(e) => (e.target as HTMLInputElement).value = ''}
             multiple 
             accept="image/*" 
             className="hidden" 
@@ -102,9 +103,9 @@ const App: React.FC = () => {
         </header>
 
         {/* Main Editor Preview */}
-        <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
-           {/* Wrapper to control max size so dynamic aspect ratio doesn't overflow */}
-           <div className="w-full max-w-md max-h-full flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden relative">
+           {/* Flexible container that doesn't force width, allowing aspect-ratio to drive size */}
+           <div className="relative w-full h-full flex items-center justify-center">
              {activeSlide && (
                 <Editor 
                   slide={activeSlide} 
@@ -131,6 +132,7 @@ const App: React.FC = () => {
             type="file" 
             ref={fileInputRef} 
             onChange={handleFileChange} 
+            onClick={(e) => (e.target as HTMLInputElement).value = ''}
             multiple 
             accept="image/*" 
             className="hidden" 

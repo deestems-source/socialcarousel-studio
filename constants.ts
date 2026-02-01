@@ -18,12 +18,14 @@ export const COLORS: ColorOption[] = [
 ];
 
 export const ASPECT_RATIOS: AspectRatioOption[] = [
-  { label: 'Square', value: '1 / 1', width: 1080, height: 1080, iconClass: 'aspect-square' },
-  { label: 'Portrait', value: '4 / 5', width: 1080, height: 1350, iconClass: 'aspect-[4/5]' },
+  { label: '1:1', value: '1 / 1', width: 1080, height: 1080, iconClass: 'aspect-square' },
+  { label: '4:5', value: '4 / 5', width: 1080, height: 1350, iconClass: 'aspect-[4/5]' },
+  { label: '9:16', value: '9 / 16', width: 1080, height: 1920, iconClass: 'aspect-[9/16]' },
+  { label: '16:9', value: '16 / 9', width: 1920, height: 1080, iconClass: 'aspect-video' },
 ];
 
-export const DEFAULT_CAPTION = "Write your caption here...";
-export const DEFAULT_FONT = 'font-inter';
+export const DEFAULT_CAPTION = "";
+export const DEFAULT_FONT = 'font-oswald';
 export const DEFAULT_COLOR = '#FFFFFF';
 export const DEFAULT_SIZE = 18;
 export const DEFAULT_GRADIENT_INTENSITY = 0.7;
