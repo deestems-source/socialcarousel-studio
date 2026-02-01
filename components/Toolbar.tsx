@@ -1,25 +1,24 @@
 import React from 'react';
-import { AlignLeft, AlignCenter, AlignRight, Type, Palette, Wand2 } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Type, Palette, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Slide, FontOption, ColorOption, EditorTab } from '../types';
 import { FONTS, COLORS } from '../constants';
 
 interface ToolbarProps {
   slide: Slide;
   activeTab: EditorTab;
-  isGenerating: boolean;
   onTabChange: (tab: EditorTab) => void;
   onUpdate: (updates: Partial<Slide>) => void;
-  onGenerateCaption: () => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   slide, 
   activeTab, 
-  isGenerating,
   onTabChange, 
-  onUpdate,
-  onGenerateCaption
+  onUpdate
 }) => {
+  const APP_URL = "https://deestems-source.github.io/socialcarousel-studio/";
+
   return (
     <div className="bg-white rounded-t-3xl shadow-negative-lg border-t border-gray-100 flex flex-col h-full">
       {/* Tab Navigation */}
@@ -37,10 +36,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <Palette size={16} /> Style
         </button>
         <button 
-          onClick={() => onTabChange('ai')}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'ai' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}
+          onClick={() => onTabChange('qr')}
+          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'qr' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500'}`}
         >
-          <Wand2 size={16} /> AI Tools
+          <QrCode size={16} /> Share
         </button>
       </div>
 
@@ -133,25 +132,32 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </div>
         )}
 
-        {activeTab === 'ai' && (
-          <div className="space-y-4">
-             <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-                   <Wand2 size={16} /> Magic Caption
-                </h3>
-                <p className="text-sm text-purple-700 mb-4">
-                  Let Gemini AI analyze your photo and write a perfect caption for you.
-                </p>
-                <button
-                  onClick={onGenerateCaption}
-                  disabled={isGenerating}
-                  className={`w-full py-3 rounded-lg text-white font-medium shadow-md transition-all ${
-                    isGenerating ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 active:scale-95'
-                  }`}
-                >
-                  {isGenerating ? 'Analyzing Photo...' : 'Generate Caption'}
-                </button>
+        {activeTab === 'qr' && (
+          <div className="flex flex-col items-center justify-center space-y-6 py-4">
+             <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
+                <QRCodeSVG 
+                  value={APP_URL} 
+                  size={180}
+                  level="H"
+                  includeMargin={true}
+                />
              </div>
+             
+             <div className="text-center space-y-2">
+               <h3 className="font-bold text-gray-900">Share Application</h3>
+               <p className="text-sm text-gray-500 max-w-[250px]">
+                 Scan this code to open SocialCarousel Studio on another device.
+               </p>
+             </div>
+
+             <a 
+               href={APP_URL} 
+               target="_blank" 
+               rel="noopener noreferrer"
+               className="text-xs text-blue-500 hover:underline break-all max-w-[90%] text-center"
+             >
+               {APP_URL}
+             </a>
           </div>
         )}
       </div>

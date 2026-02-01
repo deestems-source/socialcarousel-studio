@@ -1,4 +1,4 @@
-const CACHE_NAME = 'social-carousel-v2';
+const CACHE_NAME = 'social-carousel-v3-offline';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -22,7 +22,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keyList.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('Deleting old cache:', key);
             return caches.delete(key);
           }
         })
@@ -34,7 +33,7 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event
 self.addEventListener('fetch', (event) => {
-  // Navigation requests (HTML) - Network First, then Cache
+  // Navigation requests (HTML)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -45,23 +44,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy for assets: Cache First, falling back to Network
+  // Stale-while-revalidate strategy for static assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
         if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
           return networkResponse;
         }
-        // Cache external assets (like tailwind CDN) and local assets
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
-           cache.put(event.request, responseToCache);
+          cache.put(event.request, responseToCache);
         });
         return networkResponse;
+      }).catch(() => {
+        // Fallback or suppress error if offline and not in cache
       });
+
+      return cachedResponse || fetchPromise;
     })
   );
 });

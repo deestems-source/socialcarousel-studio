@@ -19,4 +19,4 @@ export interface ColorOption {
   value: string;
 }
 
-export type EditorTab = 'text' | 'style' | 'ai';
+export type EditorTab = 'text' | 'style' | 'qr';

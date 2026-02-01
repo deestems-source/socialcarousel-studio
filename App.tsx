@@ -1,18 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Plus, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Image as ImageIcon } from 'lucide-react';
 import { Editor } from './components/Editor';
 import { SlideRail } from './components/SlideRail';
 import { Toolbar } from './components/Toolbar';
 import { Slide, EditorTab } from './types';
 import { DEFAULT_CAPTION, DEFAULT_COLOR, DEFAULT_FONT, DEFAULT_SIZE } from './constants';
-import { generateCaption } from './services/geminiService';
 import { downloadSlide } from './services/canvasService';
 
 const App: React.FC = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [activeSlideId, setActiveSlideId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<EditorTab>('text');
-  const [isGenerating, setIsGenerating] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,34 +48,6 @@ const App: React.FC = () => {
     setSlides(newSlides);
     if (activeSlideId === id) {
       setActiveSlideId(newSlides.length > 0 ? newSlides[0].id : null);
-    }
-  };
-
-  // AI Caption Logic
-  const handleGenerateCaption = async () => {
-    if (!activeSlide) return;
-    setIsGenerating(true);
-    try {
-      // Need to fetch blob and convert to base64 for the service
-      const response = await fetch(activeSlide.imageUrl);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      
-      reader.onloadend = async () => {
-        const base64 = reader.result as string;
-        try {
-          const caption = await generateCaption(base64);
-          updateActiveSlide({ caption });
-        } catch (error) {
-          alert('Could not generate caption. Check API Key.');
-        } finally {
-          setIsGenerating(false);
-        }
-      };
-      reader.readAsDataURL(blob);
-    } catch (e) {
-      console.error(e);
-      setIsGenerating(false);
     }
   };
 
@@ -156,10 +126,8 @@ const App: React.FC = () => {
           <Toolbar 
             slide={activeSlide}
             activeTab={activeTab}
-            isGenerating={isGenerating}
             onTabChange={setActiveTab}
             onUpdate={updateActiveSlide}
-            onGenerateCaption={handleGenerateCaption}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400">
