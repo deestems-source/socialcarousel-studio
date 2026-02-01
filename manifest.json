@@ -1,22 +1,48 @@
 {
-  "short_name": "SocialCarousel",
+  "id": "social-carousel-studio",
   "name": "SocialCarousel Studio",
+  "short_name": "SocialCarousel",
+  "description": "Create aesthetic photo carousels for social media offline.",
   "icons": [
     {
       "src": "https://placehold.co/192x192/2563eb/ffffff?text=SC",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "https://placehold.co/192x192/2563eb/ffffff?text=SC",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
     },
     {
       "src": "https://placehold.co/512x512/2563eb/ffffff?text=SC",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "https://placehold.co/512x512/2563eb/ffffff?text=SC",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
   "start_url": "./index.html",
-  "background_color": "#f9fafb",
   "display": "standalone",
-  "scope": "./",
+  "background_color": "#ffffff",
   "theme_color": "#ffffff",
-  "orientation": "portrait-primary"
+  "orientation": "portrait",
+  "scope": "./",
+  "categories": ["photo", "productivity", "social"],
+  "shortcuts": [
+    {
+      "name": "New Carousel",
+      "short_name": "New",
+      "description": "Create a new carousel",
+      "url": "./index.html",
+      "icons": [{ "src": "https://placehold.co/192x192/2563eb/ffffff?text=New", "sizes": "192x192" }]
+    }
+  ]
 }

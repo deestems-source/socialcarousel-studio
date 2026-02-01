@@ -63,16 +63,5 @@
     <div id="root"></div>
     <!-- Entry point for Vite -->
     <script type="module" src="./index.tsx"></script>
-    
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          // Register SW from the root relative path
-          navigator.serviceWorker.register('./sw.js')
-            .then((reg) => console.log('Service Worker registered:', reg.scope))
-            .catch((err) => console.error('Service Worker registration failed:', err));
-        });
-      }
-    </script>
   </body>
 </html>

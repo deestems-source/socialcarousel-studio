@@ -3,6 +3,7 @@ import { Plus, Image as ImageIcon } from 'lucide-react';
 import { Editor } from './components/Editor';
 import { SlideRail } from './components/SlideRail';
 import { Toolbar } from './components/Toolbar';
+import { ReloadPrompt } from './components/ReloadPrompt';
 import { Slide, EditorTab } from './types';
 import { DEFAULT_CAPTION, DEFAULT_COLOR, DEFAULT_FONT, DEFAULT_SIZE, DEFAULT_GRADIENT_INTENSITY, DEFAULT_ASPECT_RATIO, DEFAULT_IMAGE_POSITION, DEFAULT_SCALE } from './constants';
 import { downloadSlide } from './services/canvasService';
@@ -66,6 +67,7 @@ const App: React.FC = () => {
   if (slides.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+        <ReloadPrompt />
         <div className="text-center max-w-md w-full">
            <div className="bg-blue-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
               <ImageIcon className="text-blue-600" size={40} />
@@ -95,6 +97,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row max-w-6xl mx-auto md:shadow-2xl md:my-8 md:rounded-2xl md:overflow-hidden md:h-[90vh]">
+      <ReloadPrompt />
       
       {/* LEFT: Preview & Rail */}
       <div className="flex-1 flex flex-col h-[60vh] md:h-full bg-gray-900 md:bg-gray-100 relative">
