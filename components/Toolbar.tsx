@@ -1,8 +1,8 @@
 import React from 'react';
-import { AlignLeft, AlignCenter, AlignRight, Type, Palette, QrCode } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Type, Palette, QrCode, Ratio, ZoomIn } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Slide, FontOption, ColorOption, EditorTab } from '../types';
-import { FONTS, COLORS } from '../constants';
+import { Slide, EditorTab } from '../types';
+import { FONTS, COLORS, ASPECT_RATIOS } from '../constants';
 
 interface ToolbarProps {
   slide: Slide;
@@ -95,6 +95,57 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         {activeTab === 'style' && (
           <div className="space-y-6">
+            
+            {/* Aspect Ratio Selector */}
+            <div>
+              <div className="flex items-center gap-2 mb-3 text-gray-400">
+                <Ratio size={14} />
+                <h3 className="text-xs font-bold uppercase">Aspect Ratio</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {ASPECT_RATIOS.map((ratio) => (
+                  <button
+                    key={ratio.value}
+                    onClick={() => onUpdate({ aspectRatio: ratio.value })}
+                    className={`flex items-center gap-3 p-2 rounded-lg border text-sm transition-all ${
+                      slide.aspectRatio === ratio.value 
+                      ? 'bg-blue-50 border-blue-500 text-blue-700' 
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 bg-gray-300 rounded-sm ${ratio.iconClass} ${slide.aspectRatio === ratio.value ? 'bg-blue-400' : ''}`} />
+                    <span>{ratio.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <hr className="border-gray-100" />
+            
+             {/* Scale/Zoom Slider */}
+            <div>
+               <div className="flex justify-between items-center mb-2">
+                 <div className="flex items-center gap-2 text-gray-400">
+                    <ZoomIn size={14} />
+                    <h3 className="text-xs font-bold uppercase">Zoom / Scale</h3>
+                 </div>
+                 <span className="text-xs text-gray-500">{Math.round((slide.scale || 1) * 100)}%</span>
+               </div>
+               <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
+                  <input 
+                    type="range" 
+                    min="1" 
+                    max="3" 
+                    step="0.05"
+                    value={slide.scale || 1} 
+                    onChange={(e) => onUpdate({ scale: Number(e.target.value) })}
+                    className="flex-1 accent-blue-600"
+                  />
+               </div>
+            </div>
+
+            <hr className="border-gray-100" />
+
             <div>
               <h3 className="text-xs font-bold text-gray-400 uppercase mb-3">Typography</h3>
               <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
@@ -128,6 +179,24 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   />
                 ))}
               </div>
+            </div>
+
+            {/* Gradient Intensity */}
+            <div>
+               <div className="flex justify-between items-center mb-2">
+                 <h3 className="text-xs font-bold text-gray-400 uppercase">Shadow Intensity</h3>
+                 <span className="text-xs text-gray-500">{Math.round((slide.gradientIntensity || 0.7) * 100)}%</span>
+               </div>
+               <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={(slide.gradientIntensity || 0.7) * 100} 
+                    onChange={(e) => onUpdate({ gradientIntensity: Number(e.target.value) / 100 })}
+                    className="flex-1 accent-blue-600"
+                  />
+               </div>
             </div>
           </div>
         )}

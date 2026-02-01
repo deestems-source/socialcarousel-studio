@@ -1,4 +1,4 @@
-import { FontOption, ColorOption } from './types';
+import { FontOption, ColorOption, AspectRatioOption } from './types';
 
 export const FONTS: FontOption[] = [
   { name: 'Modern', value: 'font-inter', label: 'Inter' },
@@ -17,7 +17,18 @@ export const COLORS: ColorOption[] = [
   { name: 'Lime', value: '#A3E635' },   // lime-400
 ];
 
+export const ASPECT_RATIOS: AspectRatioOption[] = [
+  { label: 'Square', value: '1 / 1', width: 1080, height: 1080, iconClass: 'aspect-square' },
+  { label: 'Portrait', value: '4 / 5', width: 1080, height: 1350, iconClass: 'aspect-[4/5]' },
+  { label: 'Landscape', value: '16 / 9', width: 1920, height: 1080, iconClass: 'aspect-video' },
+  { label: 'Story', value: '9 / 16', width: 1080, height: 1920, iconClass: 'aspect-[9/16]' },
+];
+
 export const DEFAULT_CAPTION = "Write your caption here...";
 export const DEFAULT_FONT = 'font-inter';
 export const DEFAULT_COLOR = '#FFFFFF';
 export const DEFAULT_SIZE = 18;
+export const DEFAULT_GRADIENT_INTENSITY = 0.7;
+export const DEFAULT_ASPECT_RATIO = '1 / 1';
+export const DEFAULT_IMAGE_POSITION = { x: 0, y: 0 }; // Center
+export const DEFAULT_SCALE = 1;

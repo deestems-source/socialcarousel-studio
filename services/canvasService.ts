@@ -1,5 +1,5 @@
 import { Slide } from "../types";
-import { FONTS } from "../constants";
+import { ASPECT_RATIOS, DEFAULT_ASPECT_RATIO } from "../constants";
 
 // Helper to load image
 const loadImage = (src: string): Promise<HTMLImageElement> => {
@@ -24,32 +24,73 @@ const getFontFamily = (tailwindClass: string): string => {
 
 export const downloadSlide = async (slide: Slide) => {
   const canvas = document.createElement('canvas');
-  const size = 1080; // Standard high-res square
-  canvas.width = size;
-  canvas.height = size;
+  
+  // Determine dimensions based on aspect ratio
+  const ratioConfig = ASPECT_RATIOS.find(r => r.value === slide.aspectRatio) 
+                      || ASPECT_RATIOS.find(r => r.value === DEFAULT_ASPECT_RATIO)!;
+  
+  const width = ratioConfig.width;
+  const height = ratioConfig.height;
+
+  canvas.width = width;
+  canvas.height = height;
+  
   const ctx = canvas.getContext('2d');
 
   if (!ctx) return;
 
   try {
-    // 1. Draw Image
+    // 1. Draw Image with Transforms (Free Position + Scale)
     const img = await loadImage(slide.imageUrl);
     
-    // Calculate aspect ratio to cover
-    const scale = Math.max(size / img.width, size / img.height);
-    const x = (size / 2) - (img.width / 2) * scale;
-    const y = (size / 2) - (img.height / 2) * scale;
+    // Save context to restore after transform
+    ctx.save();
     
-    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+    // Center of canvas
+    ctx.translate(width / 2, height / 2);
+    
+    // Apply User Translation (calculated as percentage of canvas dimensions)
+    const pos = slide.imagePosition || { x: 0, y: 0 };
+    ctx.translate(
+      (pos.x / 100) * width,
+      (pos.y / 100) * height
+    );
+    
+    // Apply User Scale
+    const scale = slide.scale || 1;
+    ctx.scale(scale, scale);
+    
+    // Calculate "Cover" Scale
+    // This replicates the "min-width: 100%" or "min-height: 100%" logic
+    const imgRatio = img.width / img.height;
+    const canvasRatio = width / height;
+    
+    let renderWidth, renderHeight;
+    
+    if (imgRatio > canvasRatio) {
+      // Image is wider than canvas (relative to AR) -> fit by Height (min-height: 100%)
+      renderHeight = height;
+      renderWidth = height * imgRatio;
+    } else {
+      // Image is taller than canvas -> fit by Width (min-width: 100%)
+      renderWidth = width;
+      renderHeight = width / imgRatio;
+    }
+    
+    // Draw centered on the pivot point (which we translated to center + offset)
+    ctx.drawImage(img, -renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight);
+    
+    ctx.restore();
 
     // 2. Draw Gradient Overlay (Bottom)
-    const gradient = ctx.createLinearGradient(0, size / 2, 0, size);
+    const intensity = slide.gradientIntensity !== undefined ? slide.gradientIntensity : 0.7;
+    const gradient = ctx.createLinearGradient(0, height * 0.4, 0, height);
     gradient.addColorStop(0, 'rgba(0,0,0,0)');
-    gradient.addColorStop(1, 'rgba(0,0,0,0.8)'); // Slightly darker for better text readability
+    gradient.addColorStop(1, `rgba(0,0,0,${intensity})`); 
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, size / 2, size, size / 2);
+    ctx.fillRect(0, height * 0.4, width, height * 0.6);
 
-    // 3. Draw Text
+    // 3. Draw Caption
     const fontFamily = getFontFamily(slide.fontFamily);
     const fontSize = slide.fontSize * 2.5; // Scale up for hi-res
     ctx.font = `${fontSize}px ${fontFamily}`;
@@ -58,7 +99,7 @@ export const downloadSlide = async (slide: Slide) => {
     ctx.textBaseline = 'bottom';
 
     // Text Wrapping Logic
-    const maxWidth = size - 80; // 40px padding on each side
+    const maxWidth = width - 80; // 40px padding on each side
     const lineHeight = fontSize * 1.4;
     const words = slide.caption.split(' ');
     let line = '';
@@ -77,12 +118,14 @@ export const downloadSlide = async (slide: Slide) => {
     }
     lines.push(line);
 
-    // Position text at bottom with padding
-    const initialY = size - 60 - ((lines.length - 1) * lineHeight);
+    // Position text at VERY BOTTOM
+    // 40px padding from bottom
+    const bottomPadding = 40; 
+    const initialY = height - bottomPadding - ((lines.length - 1) * lineHeight);
     
     let textX = 40; // Left align default
-    if (slide.alignment === 'center') textX = size / 2;
-    if (slide.alignment === 'right') textX = size - 40;
+    if (slide.alignment === 'center') textX = width / 2;
+    if (slide.alignment === 'right') textX = width - 40;
 
     lines.forEach((l, index) => {
         ctx.fillText(l.trim(), textX, initialY + (index * lineHeight));

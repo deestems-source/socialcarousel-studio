@@ -4,8 +4,16 @@ import { Editor } from './components/Editor';
 import { SlideRail } from './components/SlideRail';
 import { Toolbar } from './components/Toolbar';
 import { Slide, EditorTab } from './types';
-import { DEFAULT_CAPTION, DEFAULT_COLOR, DEFAULT_FONT, DEFAULT_SIZE } from './constants';
+import { DEFAULT_CAPTION, DEFAULT_COLOR, DEFAULT_FONT, DEFAULT_SIZE, DEFAULT_GRADIENT_INTENSITY, DEFAULT_ASPECT_RATIO, DEFAULT_IMAGE_POSITION, DEFAULT_SCALE } from './constants';
 import { downloadSlide } from './services/canvasService';
+
+// Polyfill/Fallback for UUID generation
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
 const App: React.FC = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -20,13 +28,17 @@ const App: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newSlides: Slide[] = Array.from(e.target.files).map(file => ({
-        id: crypto.randomUUID(),
+        id: generateId(),
         imageUrl: URL.createObjectURL(file),
         caption: DEFAULT_CAPTION,
         fontFamily: DEFAULT_FONT,
         textColor: DEFAULT_COLOR,
         alignment: 'left',
-        fontSize: DEFAULT_SIZE
+        fontSize: DEFAULT_SIZE,
+        gradientIntensity: DEFAULT_GRADIENT_INTENSITY,
+        aspectRatio: DEFAULT_ASPECT_RATIO,
+        imagePosition: DEFAULT_IMAGE_POSITION,
+        scale: DEFAULT_SCALE
       }));
       
       setSlides(prev => [...prev, ...newSlides]);
@@ -90,9 +102,15 @@ const App: React.FC = () => {
         </header>
 
         {/* Main Editor Preview */}
-        <div className="flex-1 flex items-center justify-center p-4 md:p-8">
-           <div className="w-full max-w-md">
-             {activeSlide && <Editor slide={activeSlide} />}
+        <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
+           {/* Wrapper to control max size so dynamic aspect ratio doesn't overflow */}
+           <div className="w-full max-w-md max-h-full flex items-center justify-center">
+             {activeSlide && (
+                <Editor 
+                  slide={activeSlide} 
+                  onUpdate={updateActiveSlide}
+                />
+             )}
            </div>
         </div>
 
