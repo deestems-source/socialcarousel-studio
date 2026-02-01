@@ -20,8 +20,6 @@ export const COLORS: ColorOption[] = [
 export const ASPECT_RATIOS: AspectRatioOption[] = [
   { label: 'Square', value: '1 / 1', width: 1080, height: 1080, iconClass: 'aspect-square' },
   { label: 'Portrait', value: '4 / 5', width: 1080, height: 1350, iconClass: 'aspect-[4/5]' },
-  { label: 'Landscape', value: '16 / 9', width: 1920, height: 1080, iconClass: 'aspect-video' },
-  { label: 'Story', value: '9 / 16', width: 1080, height: 1920, iconClass: 'aspect-[9/16]' },
 ];
 
 export const DEFAULT_CAPTION = "Write your caption here...";

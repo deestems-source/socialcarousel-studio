@@ -1,6 +1,5 @@
-import React from 'react';
-import { AlignLeft, AlignCenter, AlignRight, Type, Palette, QrCode, Ratio, ZoomIn } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useEffect, useState } from 'react';
+import { AlignLeft, AlignCenter, AlignRight, Type, Palette, Download, Ratio, ZoomIn, Smartphone, Share } from 'lucide-react';
 import { Slide, EditorTab } from '../types';
 import { FONTS, COLORS, ASPECT_RATIOS } from '../constants';
 
@@ -17,7 +16,34 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onTabChange, 
   onUpdate
 }) => {
-  const APP_URL = "https://deestems-source.github.io/socialcarousel-studio/";
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    // Check for iOS
+    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(isIosDevice);
+
+    // Listen for PWA install prompt (Android/Desktop)
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
+  // Calculate Text Size Percentage (Range 12 - 48)
+  const textSizePercent = Math.round(((slide.fontSize - 12) / (48 - 12)) * 100);
 
   return (
     <div className="bg-white rounded-t-3xl shadow-negative-lg border-t border-gray-100 flex flex-col h-full">
@@ -36,10 +62,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <Palette size={16} /> Style
         </button>
         <button 
-          onClick={() => onTabChange('qr')}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'qr' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500'}`}
+          onClick={() => onTabChange('install')}
+          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'install' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500'}`}
         >
-          <QrCode size={16} /> Share
+          <Smartphone size={16} /> Install
         </button>
       </div>
 
@@ -79,16 +105,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                </div>
             </div>
 
-            <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
-                <span className="text-xs font-semibold text-gray-500 uppercase">Size</span>
-                <input 
-                  type="range" 
-                  min="12" 
-                  max="48" 
-                  value={slide.fontSize} 
-                  onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
-                  className="flex-1 accent-blue-600"
-                />
+            {/* Text Size with Percentage */}
+            <div>
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase">Size</span>
+                    <span className="text-xs text-gray-500">{textSizePercent}%</span>
+                </div>
+                <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
+                    <input 
+                      type="range" 
+                      min="12" 
+                      max="48" 
+                      value={slide.fontSize} 
+                      onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+                      className="flex-1 accent-blue-600"
+                    />
+                </div>
             </div>
           </div>
         )}
@@ -201,32 +233,52 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </div>
         )}
 
-        {activeTab === 'qr' && (
-          <div className="flex flex-col items-center justify-center space-y-6 py-4">
-             <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
-                <QRCodeSVG 
-                  value={APP_URL} 
-                  size={180}
-                  level="H"
-                  includeMargin={true}
-                />
-             </div>
+        {activeTab === 'install' && (
+          <div className="flex flex-col items-center justify-center space-y-6 py-8">
              
-             <div className="text-center space-y-2">
-               <h3 className="font-bold text-gray-900">Share Application</h3>
-               <p className="text-sm text-gray-500 max-w-[250px]">
-                 Scan this code to open SocialCarousel Studio on another device.
-               </p>
-             </div>
+             {/* Android / Desktop Install */}
+             {deferredPrompt && (
+                <div className="text-center space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-full inline-flex">
+                    <Download className="text-blue-600" size={32} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xl text-gray-900">Install App</h3>
+                    <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
+                      Add SocialCarousel to your home screen for the best experience.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleInstallClick}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold shadow-lg transition-transform active:scale-95"
+                  >
+                    Install Now
+                  </button>
+                </div>
+             )}
 
-             <a 
-               href={APP_URL} 
-               target="_blank" 
-               rel="noopener noreferrer"
-               className="text-xs text-blue-500 hover:underline break-all max-w-[90%] text-center"
-             >
-               {APP_URL}
-             </a>
+             {/* iOS Instructions */}
+             {isIOS && (
+                <div className="bg-gray-50 p-6 rounded-2xl max-w-sm mx-auto">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Share className="text-blue-600" />
+                    <h3 className="font-bold text-gray-900">Install on iPhone</h3>
+                  </div>
+                  <ol className="text-sm text-gray-600 space-y-3 list-decimal list-inside text-left">
+                    <li>Tap the <span className="font-bold">Share</span> button in your browser bar.</li>
+                    <li>Scroll down and tap <span className="font-bold">Add to Home Screen</span>.</li>
+                    <li>Tap <span className="font-bold">Add</span> in the top right corner.</li>
+                  </ol>
+                </div>
+             )}
+
+             {/* Fallback if installed or not supported */}
+             {!deferredPrompt && !isIOS && (
+               <div className="text-center text-gray-400 p-8">
+                  <Smartphone size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>App is already installed or not supported on this browser.</p>
+               </div>
+             )}
           </div>
         )}
       </div>

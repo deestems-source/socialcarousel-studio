@@ -31,4 +31,4 @@ export interface AspectRatioOption {
   iconClass: string; // Tailwind class to represent shape
 }
 
-export type EditorTab = 'text' | 'style' | 'qr';
+export type EditorTab = 'text' | 'style' | 'install';
