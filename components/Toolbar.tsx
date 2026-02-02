@@ -20,9 +20,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const textSizePercent = Math.round(((slide.fontSize - 12) / (48 - 12)) * 100);
 
   return (
-    <div className="bg-white rounded-t-3xl shadow-negative-lg border-t border-gray-100 flex flex-col h-full">
+    <div className="bg-white rounded-t-3xl shadow-negative md:shadow-none border-t border-gray-100 flex flex-col h-full pb-[env(safe-area-inset-bottom)]">
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-100">
+      <div className="flex border-b border-gray-100 shrink-0">
         <button 
           onClick={() => onTabChange('text')}
           className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'text' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
@@ -45,9 +45,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               <textarea
                 value={slide.caption}
                 onChange={(e) => onUpdate({ caption: e.target.value })}
-                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none text-gray-700"
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none text-gray-700 text-base"
                 rows={3}
                 placeholder="Enter your caption..."
+                style={{ fontSize: '16px' }} 
               />
               
               <div className="flex justify-between items-center bg-gray-50 p-2 rounded-lg">

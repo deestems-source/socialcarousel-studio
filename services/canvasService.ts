@@ -131,12 +131,47 @@ export const downloadSlide = async (slide: Slide) => {
         ctx.fillText(l.trim(), textX, initialY + (index * lineHeight));
     });
 
-    // 4. Download
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    const link = document.createElement('a');
-    link.download = `slide-${slide.id}.jpg`;
-    link.href = dataUrl;
-    link.click();
+    // 4. Export (Mobile Optimized)
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        alert("Could not generate image.");
+        return;
+      }
+
+      const fileName = `social-carousel-${slide.id.substring(0, 8)}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      // Try Native Share API first (Works best on iOS/Android PWA)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'SocialCarousel',
+            text: 'Created with SocialCarousel Studio'
+          });
+          return; // Success, stop here
+        } catch (error) {
+          if ((error as Error).name !== 'AbortError') {
+             console.warn('Share failed, falling back to download', error);
+          } else {
+             return; // User cancelled share
+          }
+        }
+      }
+
+      // Fallback: Blob URL Download (Better than DataURL for iOS)
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Cleanup
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    }, 'image/png', 1.0);
 
   } catch (err) {
     console.error("Failed to render slide", err);

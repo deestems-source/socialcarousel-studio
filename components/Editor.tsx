@@ -232,6 +232,7 @@ export const Editor: React.FC<EditorProps> = ({ slide, onUpdate }) => {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Visual Hint for Dragging - Only show if movable */}
       {(getBounds(baseDims.w, baseDims.h).x > 0 || getBounds(baseDims.w, baseDims.h).y > 0) && (

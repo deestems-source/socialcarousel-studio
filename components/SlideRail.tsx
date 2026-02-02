@@ -36,15 +36,17 @@ export const SlideRail: React.FC<SlideRailProps> = ({
              <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-2">
                 <button 
                   onClick={(e) => { e.stopPropagation(); onRemove(slide.id); }}
-                  className="p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                  className="w-8 h-8 flex items-center justify-center bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
+                  aria-label="Delete Slide"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={14} />
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); onDownload(slide.id); }}
-                  className="p-1 bg-green-500 rounded-full text-white hover:bg-green-600"
+                  className="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full text-white hover:bg-green-600 transition-colors"
+                  aria-label="Download Slide"
                 >
-                  <Download size={12} />
+                  <Download size={14} />
                 </button>
              </div>
           )}
@@ -54,7 +56,7 @@ export const SlideRail: React.FC<SlideRailProps> = ({
       {/* Add Button */}
       <button 
         onClick={onAdd}
-        className="flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors bg-white"
+        className="flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors bg-white active:scale-95"
       >
         <Plus size={24} />
         <span className="text-xs mt-1">Add</span>

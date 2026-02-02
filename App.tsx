@@ -66,7 +66,7 @@ const App: React.FC = () => {
 
   if (slides.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+      <div className="h-[100dvh] bg-gray-50 flex flex-col items-center justify-center p-6">
         <ReloadPrompt />
         <div className="text-center max-w-md w-full">
            <div className="bg-blue-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -96,12 +96,12 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row max-w-6xl mx-auto md:shadow-2xl md:my-8 md:rounded-2xl md:overflow-hidden md:h-[90vh]">
+    <div className="h-[100dvh] bg-gray-100 flex flex-col md:flex-row max-w-6xl mx-auto md:shadow-2xl md:my-8 md:rounded-2xl md:overflow-hidden md:h-[90vh]">
       <ReloadPrompt />
       
       {/* LEFT: Preview & Rail */}
-      <div className="flex-1 flex flex-col h-[60vh] md:h-full bg-gray-900 md:bg-gray-100 relative">
-        <header className="absolute top-0 left-0 right-0 p-4 z-10 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent md:hidden text-white">
+      <div className="flex-1 flex flex-col h-[60dvh] md:h-full bg-gray-900 md:bg-gray-100 relative">
+        <header className="absolute top-0 left-0 right-0 p-4 z-10 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent md:hidden text-white pointer-events-none">
            <h1 className="font-bold">SocialCarousel</h1>
         </header>
 
@@ -144,7 +144,7 @@ const App: React.FC = () => {
       </div>
 
       {/* RIGHT: Toolbar (Bottom Sheet on Mobile, Sidebar on Desktop) */}
-      <div className="h-[40vh] md:h-full md:w-96 bg-white z-20 shadow-negative md:shadow-none flex flex-col">
+      <div className="h-[40dvh] md:h-full md:w-96 bg-white z-20 shadow-negative md:shadow-none flex flex-col">
         {activeSlide ? (
           <Toolbar 
             slide={activeSlide}
